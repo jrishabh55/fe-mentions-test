@@ -16,7 +16,15 @@ textarea {
 }
 
 mark {
-  @apply rounded bg-blue-300 text-transparent;
+  @apply rounded bg-red-300 text-transparent;
+}
+
+mark.hashtag {
+  @apply bg-cyan-300;
+}
+
+mark.mention {
+  @apply bg-blue-300;
 }
 
 textarea:focus,

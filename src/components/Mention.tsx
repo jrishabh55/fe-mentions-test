@@ -9,10 +9,12 @@ import {
   useState
 } from 'react';
 
-import { getLastMention } from '../utils';
+import { getCoords, getLastMention } from '../utils';
 
 function applyHighlights(text: string) {
-  text = text.replace(/\n$/g, '\n\n').replace(/[@#].+?\b/g, '<mark>$&</mark>');
+  text = text.replace(/\n$/g, '\n\n');
+  text = text.replace(/@[a-zA-Z0-9]+?\b/g, '<mark class="mention">$&</mark>');
+  text = text.replace(/#[a-zA-Z0-9]+?\b/g, '<mark class="hashtag">$&</mark>');
 
   return text;
 }
@@ -54,6 +56,7 @@ const Mention: FC<MentionProps> = ({ mentions }) => {
     const { value } = target;
 
     const currentSymbol = value.at(-2) as MentionSymbol;
+    console.log('🚀 ~ file: Mention.tsx ~ line 57 ~ handleKeyUp ~ currentSymbol', currentSymbol);
 
     if (!Object.hasOwn(mutationMap, currentSymbol)) {
       return;
@@ -64,6 +67,7 @@ const Mention: FC<MentionProps> = ({ mentions }) => {
 
     if (data) {
       const lastMention = getLastMention(value, currentSymbol).toLowerCase();
+      console.log(data, lastMention);
       setMentionList(data.filter((item) => item.toLowerCase().includes(lastMention)));
     }
   };
@@ -93,7 +97,7 @@ const Mention: FC<MentionProps> = ({ mentions }) => {
   }, [currentSymbol, mentionList, value]);
 
   const highlights = useMemo(() => applyHighlights(value), [value]);
-  const textAreaCoordinate = textareaRef.current?.getBoundingClientRect() ?? { x: 0, y: 0 };
+  const textAreaCoordinate = getCoords(textareaRef.current);
 
   useEffect(() => {
     if (!textareaRef.current) {
@@ -119,13 +123,13 @@ const Mention: FC<MentionProps> = ({ mentions }) => {
   return (
     <>
       <div ref={backdropRef} className="backdrop">
-        <div dangerouslySetInnerHTML={{ __html: highlights }} className="highlights"></div>
+        <div dangerouslySetInnerHTML={{ __html: highlights }} className="highlights" />
       </div>
 
       {filteredMentionList.length > 0 && (
         <ul
           className="absolute z-30"
-          style={{ right: textAreaCoordinate.x, top: textAreaCoordinate.y }}>
+          style={{ left: textAreaCoordinate.x, top: textAreaCoordinate.y }}>
           {filteredMentionList.map((mention) => (
             <li key={mention}>
               <div

@@ -1,4 +1,13 @@
-import { ChangeEventHandler, FC, memo, MouseEventHandler, useMemo, useRef, useState } from 'react';
+import {
+  ChangeEventHandler,
+  FC,
+  memo,
+  MouseEventHandler,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
 
 import { getLastMention } from '../utils';
 
@@ -84,7 +93,28 @@ const Mention: FC<MentionProps> = ({ mentions }) => {
   }, [currentSymbol, mentionList, value]);
 
   const highlights = useMemo(() => applyHighlights(value), [value]);
-  const textAreaCoordinate = textareaRef.current?.getBoundingClientRect();
+  const textAreaCoordinate = textareaRef.current?.getBoundingClientRect() ?? { x: 0, y: 0 };
+
+  useEffect(() => {
+    if (!textareaRef.current) {
+      return;
+    }
+
+    const textArea = textareaRef.current;
+
+    const handleScroll = (ev: Event) => {
+      if (!backdropRef.current || !ev.currentTarget) {
+        return;
+      }
+      backdropRef.current.scrollTop = textArea.scrollTop ?? 0;
+    };
+
+    textArea.addEventListener('scroll', handleScroll);
+
+    return () => {
+      textArea.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   return (
     <>
@@ -94,7 +124,8 @@ const Mention: FC<MentionProps> = ({ mentions }) => {
 
       {filteredMentionList.length > 0 && (
         <ul
-          className={`absolute z-30 right-[${textAreaCoordinate?.x}] top-[${textAreaCoordinate?.y}]`}>
+          className="absolute z-30"
+          style={{ right: textAreaCoordinate.x, top: textAreaCoordinate.y }}>
           {filteredMentionList.map((mention) => (
             <li key={mention}>
               <div
